@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: php-fpm
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./docker/php/conf.d:/usr/local/etc/php/conf.d # Monta los archivos de configuración personalizados
+    environment:
+      - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 
+    networks:
+      - creatunido
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - creatunido
+
+  mysql:
+    image: mariadb:10.8
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: creatunido
+      MYSQL_USER: creatunido
+      MYSQL_PASSWORD: password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - creatunido
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - creatunido
+
+volumes:
+  mariadb_data:
+
+networks:
+  creatunido:
